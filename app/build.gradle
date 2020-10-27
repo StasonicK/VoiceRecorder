@@ -3,10 +3,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
-
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
+    dataBinding {
+        enabled = true
+    }
 
     defaultConfig {
         applicationId "com.eburg_soft.voicerecorder"
@@ -45,7 +47,10 @@ dependencies {
     // Coroutines
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9"
-    
+
+    // DataBinding
+    kapt 'com.android.databinding:compiler:3.6.1'
+
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

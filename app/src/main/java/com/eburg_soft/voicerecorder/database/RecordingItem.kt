@@ -16,5 +16,4 @@ data class RecordingItem(
     var length: Long = 0L,
     @ColumnInfo(name = "time")
     var time: Long = 0L
-) {
-}
+)
