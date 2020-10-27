@@ -22,28 +22,23 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.TimerTask
 
 class RecordService : Service() {
 
     private var mFileName: String? = null
     private var mFilePath: String? = null
-    private var mCountRecords: Int? = null
 
     private var mRecorder: MediaRecorder? = null
 
     private var mStartingTimeMillis: Long = 0
-    private var mElapsedTime: Long = 0
-    private var mIncrementTimerTask: TimerTask? = null
+    private var mElapsedMillis: Long = 0
 
     private var mDatabase: RecordDatabaseDao? = null
 
     private val mJob = Job()
     private val mUiScope = CoroutineScope(Dispatchers.Main + mJob)
 
-    private val CHANNEL_ID = "RecordService"
-
-    override fun onBind(p0: Intent?): IBinder? {
+    override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
@@ -53,9 +48,9 @@ class RecordService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        mCountRecords = intent?.extras!!.get("COUNT") as Int?
 
-        return START_STICKY
+        startRecording()
+        return START_NOT_STICKY
     }
 
     private fun startRecording() {
@@ -70,25 +65,24 @@ class RecordService : Service() {
             setAudioChannels(1)
             setAudioEncodingBitRate(192000)
         }
+
         try {
-            mRecorder?.apply {
-                prepare()
-                start()
-                mStartingTimeMillis = System.currentTimeMillis()
-                startForeground(1, createNotification())
-            }
+            mRecorder?.prepare()
+            mRecorder?.start()
+            mStartingTimeMillis = System.currentTimeMillis()
+            startForeground(1, createNotification())
         } catch (e: IOException) {
             Log.e("RecordService", "prepare failed")
         }
     }
 
     private fun createNotification(): Notification? {
-        val mBuilder: NotificationCompat.Builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_mic_white_36)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.notification_recording))
-            .setOngoing(true)
-
+        val mBuilder: NotificationCompat.Builder =
+            NotificationCompat.Builder(applicationContext, getString(R.string.notification_channel_id))
+                .setSmallIcon(R.drawable.ic_mic_white_36)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(getString(R.string.notification_recording))
+                .setOngoing(true)
         mBuilder.setContentIntent(
             PendingIntent.getActivities(
                 applicationContext, 0, arrayOf(
@@ -108,7 +102,8 @@ class RecordService : Service() {
         val dateTime = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(System.currentTimeMillis())
 
         do {
-            mFileName = (getString(R.string.default_file_name) + "_" + dateTime + count + ".mp4")
+            mFileName = (getString(R.string.default_file_name)
+                    + "_" + dateTime + count + ".mp4")
             mFilePath = application.getExternalFilesDir(null)?.absolutePath
             mFilePath += "/$mFileName"
 
@@ -122,19 +117,19 @@ class RecordService : Service() {
         val recordingItem = RecordingItem()
 
         mRecorder?.stop()
-        mElapsedTime = System.currentTimeMillis() - mStartingTimeMillis
+        mElapsedMillis = System.currentTimeMillis() - mStartingTimeMillis
         mRecorder?.release()
         Toast.makeText(
             this,
             getString(R.string.toast_recording_finish),
-            Toast.LENGTH_LONG
+            Toast.LENGTH_SHORT
         ).show()
 
         recordingItem.apply {
-            name = mFileName.toString()
-            filePath = mFilePath.toString()
-            length = mElapsedTime
-            time = System.currentTimeMillis()
+        name = mFileName.toString()
+        filePath = mFilePath.toString()
+        length = mElapsedMillis
+        time = System.currentTimeMillis()
         }
 
         mRecorder = null

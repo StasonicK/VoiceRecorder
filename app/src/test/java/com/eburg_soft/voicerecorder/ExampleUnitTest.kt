@@ -1,7 +1,6 @@
 package com.eburg_soft.voicerecorder
 
-import org.junit.Test
-
+import org.junit.*
 import org.junit.Assert.*
 
 /**

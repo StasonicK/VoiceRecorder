@@ -13,12 +13,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-class RecordViewModel(private val app: Application) : AndroidViewModel(app) {
+class RecordViewModel(app: Application): AndroidViewModel(app) {
 
     private val TRIGGER_TIME = "TRIGGER_AT"
-    private val second: Long = 1000L
+    private val second: Long = 1_000L
 
-    private var prefs = app.getSharedPreferences("com.eburg_soft.voicerecorder.record", Context.MODE_PRIVATE)
+    private var prefs = app.getSharedPreferences("com.eburg_soft.voicerecorder", Context.MODE_PRIVATE)
 
     private val _elapsedTime = MutableLiveData<String>()
 
@@ -32,16 +32,16 @@ class RecordViewModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     fun timeFormatter(time: Long): String {
-        return String.format(
-            "%02d:%02d%:02d",
-            TimeUnit.MILLISECONDS.toHours(time) % 60,
-            TimeUnit.MILLISECONDS.toMinutes(time) % 60,
-            TimeUnit.MILLISECONDS.toSeconds(time) % 60
-        )
+        return String.format("%02d:%02d:%02d",
+        TimeUnit.MILLISECONDS.toHours(time)%60,
+        TimeUnit.MILLISECONDS.toMinutes(time)%60,
+        TimeUnit.MILLISECONDS.toSeconds(time)%60)
     }
 
     fun stopTimer() {
-        timer.cancel()
+        if (this::timer.isInitialized) {
+            timer.cancel()
+        }
         resetTimer()
     }
 
@@ -58,7 +58,7 @@ class RecordViewModel(private val app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val triggerTime = loadTime()
             timer = object : CountDownTimer(triggerTime, second) {
-                override fun onTick(time: Long) {
+                override fun onTick(millisUntilFinished: Long) {
                     _elapsedTime.value = timeFormatter(SystemClock.elapsedRealtime() - triggerTime)
                 }
 
@@ -72,18 +72,17 @@ class RecordViewModel(private val app: Application) : AndroidViewModel(app) {
 
     fun resetTimer() {
         _elapsedTime.value = timeFormatter(0)
-        viewModelScope.launch {
-            saveTime(0)
-        }
+        viewModelScope.launch { saveTime(0) }
     }
 
-    suspend fun saveTime(triggerTime: Long) =
+    private suspend fun saveTime(triggerTime: Long) =
         withContext(Dispatchers.IO) {
             prefs.edit().putLong(TRIGGER_TIME, triggerTime).apply()
         }
 
-    suspend fun loadTime(): Long =
+    private suspend fun loadTime(): Long =
         withContext(Dispatchers.IO) {
-            prefs.getLong(TRIGGER_TIME, 0)
+            prefs.getLong(TRIGGER_TIME,0)
         }
+
 }

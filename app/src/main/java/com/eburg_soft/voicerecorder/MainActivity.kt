@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     fun isServiceRunning(): Boolean {
         val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (service.service.className == "com.eburg_soft.voicerecorder.record.RecordService") {
+            if ("com.eburg_soft.voicerecorder.record.RecordService" == service.service.className) {
                 return true
             }
         }
