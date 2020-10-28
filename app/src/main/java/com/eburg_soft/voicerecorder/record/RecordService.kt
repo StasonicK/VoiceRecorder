@@ -126,10 +126,10 @@ class RecordService : Service() {
         ).show()
 
         recordingItem.apply {
-        name = mFileName.toString()
-        filePath = mFilePath.toString()
-        length = mElapsedMillis
-        time = System.currentTimeMillis()
+            name = mFileName.toString()
+            filePath = mFilePath.toString()
+            length = mElapsedMillis
+            time = System.currentTimeMillis()
         }
 
         mRecorder = null
